@@ -30,15 +30,24 @@ end
 
 --Here we override the default ULX ban function so we can auto ban the owning account
 --if it was the sharer that was banned
-local _ULib_Ban = ULib.ban
-function ULib.ban( ply, time, reason, admin )
-	if ply.isfamilysharing then   
+function ULib.kickban( ply, time, reason, admin )
+	if not time or type( time ) ~= "number" then
+		time = 0
+	end 
+	if ply.isfamilysharing then 
+		print("Sharing account (Should ban owner)")  
 		--Ban the owner becuase there sharing
 		local _reason = [[[FAMILY SHARE] Banned from server becuase a user family sharing with your account was banned (]]..ply:SteamID()..[[). If you think this is a mistake please appeal on the forums.]]
-		ULib.addBan( user.familysharingowner, time, _reason, "" )
+		RunConsoleCommand("ulx", "banid" , ply.familysharingowner , time , _reason)
 	end
-	_ULib_Ban( ply, time, reason, admin )
-end  
+
+	ULib.addBan( ply:SteamID(), time, reason, ply:Name(), admin )
+
+	-- Load our currently banned users so we don't overwrite them
+	if ULib.fileExists( "cfg/banned_user.cfg" ) then
+		ULib.execFile( "cfg/banned_user.cfg" )
+	end
+end
 
 hook.Add("PlayerAuthed" , "_check_family_shared" , function(ply , sid , uid)
 	MsgC(Color(70,100,255) , "[FAMILY SHARING] " , Color(100,255,100) , "Checking account '",
